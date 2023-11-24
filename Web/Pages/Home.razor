@@ -1,0 +1,90 @@
+﻿@page "/"
+@using Domain.DTO
+@using Newtonsoft.Json
+@using System.Text
+@inject IConfiguration Configuration
+
+<PageTitle>Home</PageTitle>
+<div class="main">
+    <section class="sidebar">
+        <div class="form-group">
+            <label>Nombre de Usuario</label>
+            <input type="text"
+                   id="username"
+                   class="form-control"
+                   @bind="Usuario" />
+        </div>
+
+        <div class="form-group">
+            <label>Numero Inicial</label>
+            <input type="text"
+                   id="NumeroInicial"
+                   class="form-control"
+                   @bind="NumeroInicial" />
+        </div>
+
+        <div class="form-group">
+            <label>Cantidad de Primos</label>
+            <input type="text"
+                   id="username"
+                   class="form-control"
+                   @bind="Cantidad" />
+        </div>
+
+        <div class="form-group">
+            <button type="button" class="btn btn-primary" @onclick="SaveTransaction">Iniciar</button>
+        </div>
+    </section>
+
+    <section class="pizarron">
+        @if (NumbersResponse.Message != null)
+        {
+            <p>@NumbersResponse.Message</p>
+            <br />
+        }
+
+        @if (NumbersResponse.PrimeNumbers != null)
+            @foreach (var item in NumbersResponse.PrimeNumbers)
+            {
+                <p>@item<span>,&#160;</span></p>
+            }
+    </section>
+</div>
+
+
+@code {
+
+    private string Usuario { get; set; }
+    private int NumeroInicial { get; set; }
+    private int Cantidad { get; set; }
+    private PrimeNumbersResponse NumbersResponse = new PrimeNumbersResponse();
+
+    private async Task SaveTransaction()
+    {
+        PrimeNumbersRequest request = new PrimeNumbersRequest();
+        request.Usuario = Usuario;
+        request.InitialNumber = NumeroInicial;
+        request.TotalNumbers = Cantidad;
+
+        using (HttpClient client = new HttpClient())
+        {
+            string jsonData = JsonConvert.SerializeObject(request);
+            StringContent stringContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
+            client.BaseAddress = new Uri(Configuration["UrlApi"]);
+            var result = await client.PostAsync("api/primenumbers/FindPrimeNumbers", stringContent);
+            var jsonResponse = await result.Content.ReadAsStringAsync();
+            NumbersResponse = JsonConvert.DeserializeObject<PrimeNumbersResponse>(jsonResponse);
+        }
+    }
+}
+
+<script type="text/javascript">
+    function SoloLetras(input) {
+        debugger
+        var regex = new RegExp('/[^a-zA-Z]/g');
+        if (!regex.test(input.value))
+            return false;
+        else
+            return true;
+    }
+</script>
